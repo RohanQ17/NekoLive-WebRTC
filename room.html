@@ -21,18 +21,37 @@
     </section>
 
     <section id="video-streams">
-        <video class="video-player" id="user-1" autoplay playsinline></video>
+        <video class="video-player" id="user-1" autoplay playsinline muted></video>
         <video class="video-player" id="user-2" autoplay playsinline></video>
     </section>
+
+    <!-- Chat Section -->
+    <section id="chat-container">
+        <div id="chat-messages"></div>
+        <div id="chat-input-container">
+            <input type="text" id="chat-input" placeholder="Type a message..." maxlength="200">
+            <button id="send-message-btn">Send</button>
+        </div>
+    </section>
+
     <section id="controls-wrapper">
-        <div class="icon-wrapper">
-            <img id="toggle-mic" class="control-icon" src="images/microphone.svg" onclick="toggleMicrophone()">
-        </div>
-        <div class="icon-wrapper">
-            <img id="video-toggle" class="control-icon" src="images/video.svg" onclick="toggleVideo()">
-        </div>
-        <div class="icon-wrapper">
-            <img id="leave-btn" class="control-icon" src="images/leave.svg" onclick="leaveRoom()">
+        <div class="control-group">
+            <div class="icon-wrapper" id="mic-wrapper">
+                <img id="toggle-mic" class="control-icon" src="images/microphone.svg" onclick="toggleMicrophone()">
+                <span class="control-label" id="mic-label">Mic On</span>
+            </div>
+            <div class="icon-wrapper" id="video-wrapper">
+                <img id="video-toggle" class="control-icon" src="images/video.svg" onclick="toggleVideo()">
+                <span class="control-label" id="video-label">Video On</span>
+            </div>
+            <div class="icon-wrapper" id="chat-wrapper">
+                <img id="chat-toggle" class="control-icon" src="images/chat.svg" onclick="toggleChat()">
+                <span class="control-label">Chat</span>
+            </div>
+            <div class="icon-wrapper" id="leave-wrapper">
+                <img id="leave-btn" class="control-icon" src="images/leave.svg" onclick="leaveRoom()">
+                <span class="control-label">Leave</span>
+            </div>
         </div>
     </section>
 </main>

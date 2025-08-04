@@ -1,43 +1,50 @@
-# NekoLive - Pure WebRTC Video Chat
+# NekoLive - Pure WebRTC Video Chat with Streaming Features
 
-A lightweight video chatroom application built with vanilla HTML, CSS, and JavaScript using pure WebRTC technology.
+A comprehensive video chatroom application built with vanilla HTML, CSS, and JavaScript using pure WebRTC technology with advanced streaming features.
 
-## Features
+## ✨ Features
 
-- 🎥 Real-time video calling using pure WebRTC
-- 🚀 No external dependencies or SDKs required
-- 🎨 Clean, modern UI with custom styling
-- 📱 Responsive design
-- 🐱 Cat-themed branding
-- 🎙️ Microphone and video toggle controls
-- 🔄 localStorage-based signaling (works for same-origin tabs)
+- 🎥 **Real-time video calling** using pure WebRTC
+- 🚀 **No external dependencies** or SDKs required
+- 💬 **Integrated chat system** with real-time messaging
+- �️ **Advanced audio controls** with mute/unmute functionality
+- 📹 **Video toggle controls** with visual feedback
+- ⌨️ **Keyboard shortcuts** for quick access
+- 🎨 **Modern UI** with glassmorphism design
+- 📱 **Fully responsive** design for all devices
+- � **Smart notifications** for user actions
+- �🐱 **Cat-themed branding** with custom styling
+- 🔄 **localStorage-based signaling** (works for same-origin tabs)
+- 📊 **Connection state monitoring** with automatic reconnection
 
-## Tech Stack
+## 🛠️ Tech Stack
 
 - **Frontend**: HTML5, CSS3, Vanilla JavaScript
 - **WebRTC**: Native browser WebRTC APIs for peer-to-peer communication
+- **Data Channels**: For real-time chat messaging
 - **Signaling**: localStorage (demo) / WebSocket (production)
 - **Fonts**: Google Fonts (Russo One, Roboto Mono, Honk)
 
-## Project Structure
+## 📁 Project Structure
 
 ```
 ├── main.html              # Landing page with room join form
-├── room.html              # Video chat room interface
-├── streams.js             # Pure WebRTC logic
+├── room.html              # Video chat room interface with streaming features
+├── streams.js             # Enhanced WebRTC logic with chat and controls
 ├── signaling-server.js    # Optional WebSocket signaling server
 ├── package.json           # Node.js dependencies for signaling server
 ├── styles/
 │   ├── main.css          # Styles for landing page
-│   └── room.css          # Styles for video chat room
+│   └── room.css          # Enhanced styles with chat and controls
 └── images/
     ├── cat.gif           # Animated cat logo
+    ├── chat.svg          # Chat icon
     ├── leave.svg         # Leave room icon
     ├── microphone.svg    # Microphone toggle icon
     └── video.svg         # Video toggle icon
 ```
 
-## Setup
+## 🚀 Setup
 
 ### Basic Setup (localStorage signaling)
 1. Clone this repository
@@ -57,42 +64,98 @@ A lightweight video chatroom application built with vanilla HTML, CSS, and JavaS
 3. Update `streams.js` to use WebSocket instead of localStorage
 4. Open `main.html` in a web browser
 
-## Usage
+## 🎮 Usage
 
+### Starting a Video Chat
 1. Open `main.html` in your browser
 2. Enter your username and a room name
 3. Click "Enter a Room" to join the video chat
-4. Use the controls to toggle microphone, video, or leave the room
-5. Share the room name with others to have them join
+4. Share the room name with others to have them join
 
-## Signaling Methods
+### Streaming Controls
+- 🎙️ **Microphone**: Click the mic icon or press `M` to toggle audio
+- 📹 **Video**: Click the video icon or press `V` to toggle video
+- 💬 **Chat**: Click the chat icon or press `C` to open/close chat
+- 🚪 **Leave**: Click the leave button to exit the room
+
+### Chat Features
+- **Real-time messaging** between connected users
+- **System notifications** for user join/leave events
+- **Timestamp display** for all messages
+- **Auto-scroll** to latest messages
+- **Enter key** to send messages quickly
+
+### Keyboard Shortcuts
+- `M` - Toggle microphone on/off
+- `V` - Toggle video on/off  
+- `C` - Toggle chat window
+- `ESC` - Close chat window
+- `Enter` - Send chat message (when in chat input)
+
+## 📱 Responsive Design
+
+The application automatically adapts to different screen sizes:
+- **Desktop**: Side-by-side video layout with floating chat
+- **Tablet**: Optimized controls and chat positioning
+- **Mobile**: Stacked video layout with full-width chat
+
+## 🔧 Signaling Methods
 
 ### Current: localStorage (Demo)
-- Works for multiple tabs/windows on the same origin
-- Perfect for testing and development
-- No server required
+- ✅ Works for multiple tabs/windows on the same origin
+- ✅ Perfect for testing and development
+- ✅ No server required
+- ✅ Includes chat messaging fallback
 
 ### Optional: WebSocket (Production)
-- Enables connection between different devices/networks
-- Requires running the included signaling server
-- Better scalability for real-world use
+- ✅ Enables connection between different devices/networks
+- ✅ Requires running the included signaling server
+- ✅ Better scalability for real-world use
+- ✅ Real-time synchronization
 
-## Controls
+## 🎨 UI Features
 
-- 🎙️ **Microphone Toggle**: Enable/disable audio
-- 📹 **Video Toggle**: Enable/disable video
-- 🚪 **Leave Room**: Exit the video chat
+### Modern Design Elements
+- **Glassmorphism effects** with backdrop blur
+- **Smooth animations** and transitions
+- **Visual feedback** for all user interactions
+- **Status indicators** for mic/video state
+- **Smart notifications** with auto-dismiss
+- **Floating control panel** with rounded design
 
-## Browser Support
+### Chat Interface
+- **Bubble-style messages** with user identification
+- **Different styling** for own vs. other messages
+- **System message support** for notifications
+- **Scrollable history** with auto-scroll
+- **Typing area** with send button
+
+## 🌐 Browser Support
 
 - Chrome 56+
 - Firefox 52+
 - Safari 11+
 - Edge 79+
 
-## Note
+## 🔒 Privacy & Security
 
-This is a pure WebRTC implementation without external SDKs. For an Agora SDK-based version, check out other branches.
+- **No data collection** - everything runs locally
+- **Peer-to-peer connections** - no data passes through servers
+- **Temporary storage** - session data cleared on exit
+- **Media permissions** - user controls camera/mic access
+
+## 🚧 Development Roadmap
+
+- [ ] Screen sharing capabilities
+- [ ] File transfer support  
+- [ ] User presence indicators
+- [ ] Room persistence
+- [ ] Audio-only mode
+- [ ] Connection quality indicators
+
+## 📝 Note
+
+This is a pure WebRTC implementation with comprehensive streaming features. The current branch includes advanced chat functionality, enhanced controls, and a modern UI. For simpler implementations, check out other branches.
 
 ## License
 
