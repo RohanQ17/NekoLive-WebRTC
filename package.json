@@ -1,0 +1,24 @@
+{
+  "name": "nekolive-webrtc-signaling",
+  "version": "1.0.0",
+  "description": "WebSocket signaling server for NekoLive WebRTC video chat",
+  "main": "signaling-server.js",
+  "scripts": {
+    "start": "node signaling-server.js",
+    "dev": "nodemon signaling-server.js"
+  },
+  "keywords": [
+    "webrtc",
+    "signaling",
+    "websocket",
+    "video-chat"
+  ],
+  "author": "RohanQ17",
+  "license": "MIT",
+  "dependencies": {
+    "ws": "^8.14.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
