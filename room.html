@@ -1,0 +1,43 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1" />
+    <title>NekoLive</title>
+    <link rel="stylesheet" href= 'styles/room.css' />
+    
+    <link href="https://fonts.googleapis.com/css2?family=Russo+One&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@500&family=Russo+One&display=swap" rel="stylesheet">
+     <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Honk&display=swap" rel="stylesheet">
+
+</head>
+<body>
+  <main class="roompage">
+    <section id="room-name-wrapper" style="font-size: 2.5rem;  text-align: center">
+        <p style=" margin: 0;font-family: 'Russo One', sans-serif;color: #eeeeee;">Room name: <span id="roomname" style="font-size: 3rem; font-family: 'Honk',serif"></span></p>
+    </section>
+
+    <section id="video-streams">
+        <video class="video-player" id="user-1" autoplay playsinline></video>
+        <video class="video-player" id="user-2" autoplay playsinline></video>
+    </section>
+    <section id="controls-wrapper">
+        <div class="icon-wrapper">
+            <img id="toggle-mic" class="control-icon" src="{% static 'images/microphone.svg' %}">
+        </div>
+        <div class="icon-wrapper">
+            <img id="video-toggle" class="control-icon" src="{% static 'images/video.svg' %}">
+        </div>
+        <div class="icon-wrapper">
+            <img id="leave-btn" class="control-icon" src="{% static 'images/leave.svg' %}">
+        </div>
+    </section>
+</main>
+
+<script type="text/javascript" src= 'agora-rtm-sdk-1.5.1.js' ></script>
+<script type="text/javascript" src= 'streams.js' ></script>
+</body>
+</html>
