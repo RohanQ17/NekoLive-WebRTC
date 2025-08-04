@@ -46,6 +46,10 @@ jspm_packages/
 # dotenv environment variables file
 .env
 
-# Agora credentials (if you decide to store them in a separate file)
+# Config files (if you decide to store them in a separate file)
 config.js
 credentials.js
+
+# Lock files
+package-lock.json
+yarn.lock

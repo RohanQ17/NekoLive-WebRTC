@@ -26,18 +26,24 @@
     </section>
     <section id="controls-wrapper">
         <div class="icon-wrapper">
-            <img id="toggle-mic" class="control-icon" src="{% static 'images/microphone.svg' %}">
+            <img id="toggle-mic" class="control-icon" src="images/microphone.svg" onclick="toggleMicrophone()">
         </div>
         <div class="icon-wrapper">
-            <img id="video-toggle" class="control-icon" src="{% static 'images/video.svg' %}">
+            <img id="video-toggle" class="control-icon" src="images/video.svg" onclick="toggleVideo()">
         </div>
         <div class="icon-wrapper">
-            <img id="leave-btn" class="control-icon" src="{% static 'images/leave.svg' %}">
+            <img id="leave-btn" class="control-icon" src="images/leave.svg" onclick="leaveRoom()">
         </div>
     </section>
 </main>
 
-<script type="text/javascript" src= 'agora-rtm-sdk-1.5.1.js' ></script>
-<script type="text/javascript" src= 'streams.js' ></script>
+<script type="text/javascript" src="streams.js"></script>
+<script type="text/javascript">
+    // Display room name from session storage
+    document.addEventListener('DOMContentLoaded', function() {
+        const roomName = sessionStorage.getItem('room') || 'Unknown';
+        document.getElementById('roomname').textContent = roomName;
+    });
+</script>
 </body>
 </html>

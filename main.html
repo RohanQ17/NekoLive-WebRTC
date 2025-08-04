@@ -6,7 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1" />
     <title>NekoLive</title>
     <link rel="stylesheet" href='styles/main.css' >
-    <script type="text/javascript" src="streams.js"/>
     <link href="https://fonts.googleapis.com/css2?family=Russo+One&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@500&family=Russo+One&display=swap" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -61,20 +60,23 @@
     <script type="text/javascript">
 
     let form = document.getElementById('form1')
-    let handleSubmit = async (e) =>{
+    let handleSubmit = async (e) => {
         e.preventDefault()
-        let room = e.target.room.value.toUpperCase()
-        let name = e.target.username.value
+        let room = e.target.room.value.toUpperCase().trim()
+        let name = e.target.username.value.trim()
 
-        let response = await fetch(`/get_token/?channel=${room}`)
-        let data = await response.json()
-        let UID = data.uid
-        let Token = data.token
-        sessionStorage.setItem('UID',UID)
-        sessionStorage.setItem('Token',Token)
-        sessionStorage.setItem('room',room)
-        sessionStorage.setItem('name',name)
-        window.open('/room/','_self')
+        // Validate inputs
+        if (!room || !name) {
+            alert('Please enter both username and room name')
+            return
+        }
+
+        // Store room and user info in session storage
+        sessionStorage.setItem('room', room)
+        sessionStorage.setItem('name', name)
+        
+        // Redirect to room page
+        window.location.href = 'room.html'
     }
     form.addEventListener('submit', handleSubmit)
     </script>
