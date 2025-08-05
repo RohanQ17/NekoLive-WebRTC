@@ -109,6 +109,9 @@ async function initializeWebSocketSignaling() {
     try {
         socket = new WebSocket(WEBSOCKET_URL);
         
+        // Ensure we receive text data, not binary (default is usually text anyway)
+        // socket.binaryType = 'arraybuffer';
+        
         socket.onopen = () => {
             console.log('WebSocket connected to:', WEBSOCKET_URL);
             console.log('User ID:', uid, 'User Name:', userName, 'Room:', roomName);
@@ -133,9 +136,35 @@ async function initializeWebSocketSignaling() {
         
         socket.onmessage = (event) => {
             console.log('Received WebSocket message:', event.data);
-            const message = JSON.parse(event.data);
-            console.log('Parsed message:', message);
-            handleSignalingMessage(message);
+            
+            let message;
+            try {
+                // Handle different data types
+                if (event.data instanceof Blob) {
+                    console.log('Received Blob data, converting to text...');
+                    event.data.text().then(text => {
+                        try {
+                            message = JSON.parse(text);
+                            console.log('Parsed message from Blob:', message);
+                            handleSignalingMessage(message);
+                        } catch (parseError) {
+                            console.error('Error parsing Blob text as JSON:', parseError);
+                        }
+                    });
+                    return;
+                } else if (typeof event.data === 'string') {
+                    message = JSON.parse(event.data);
+                } else {
+                    console.error('Unexpected data type:', typeof event.data, event.data);
+                    return;
+                }
+                
+                console.log('Parsed message:', message);
+                handleSignalingMessage(message);
+            } catch (error) {
+                console.error('Error parsing WebSocket message:', error);
+                console.error('Raw data:', event.data);
+            }
         };
         
         socket.onclose = () => {
