@@ -1,53 +1,110 @@
-# NekoLive - Pure WebRTC Video Chat with Streaming Features
+# NekoLive - Pure WebRTC Video Chat Application
 
-A comprehensive video chatroom application built with vanilla HTML, CSS, and JavaScript using pure WebRTC technology with advanced streaming features.
+[![Live Demo](https://img.shields.io/badge/Live-Demo-blue)](https://your-domain.com)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node.js](https://img.shields.io/badge/Node.js-14%2B-green)](https://nodejs.org)
 
-## ✨ Features
+A production-ready WebRTC video chat application with real-time messaging, built with vanilla JavaScript and Node.js.
 
-- 🎥 **Real-time video calling** using pure WebRTC
-- 🚀 **No external dependencies** or SDKs required
-- 💬 **Integrated chat system** with real-time messaging
-- �️ **Advanced audio controls** with mute/unmute functionality
-- 📹 **Video toggle controls** with visual feedback
-- ⌨️ **Keyboard shortcuts** for quick access
-- 🎨 **Modern UI** with glassmorphism design
-- 📱 **Fully responsive** design for all devices
-- � **Smart notifications** for user actions
-- �🐱 **Cat-themed branding** with custom styling
-- 🔄 **localStorage-based signaling** (works for same-origin tabs)
-- 📊 **Connection state monitoring** with automatic reconnection
+## 🌟 Features
 
-## 🛠️ Tech Stack
+- **Pure WebRTC**: No external SDK dependencies
+- **Real-time Video Chat**: High-quality peer-to-peer video communication
+- **Live Messaging**: Built-in chat using WebRTC data channels
+- **Cross-browser Support**: Works on Chrome, Firefox, Safari, and Edge
+- **Responsive Design**: Mobile-friendly glassmorphism UI
+- **Production Ready**: Rate limiting, CORS, health checks, and monitoring
+- **Easy Deployment**: AWS-ready with comprehensive deployment guide
 
-- **Frontend**: HTML5, CSS3, Vanilla JavaScript
-- **WebRTC**: Native browser WebRTC APIs for peer-to-peer communication
-- **Data Channels**: For real-time chat messaging
-- **Signaling**: localStorage (demo) / WebSocket (production)
-- **Fonts**: Google Fonts (Russo One, Roboto Mono, Honk)
+## � Quick Start
+
+### Prerequisites
+
+- Node.js 14+ and npm
+- Modern web browser with WebRTC support
+- HTTPS (required for WebRTC in production)
+
+### Local Development
+
+1. **Clone and Setup**
+   ```bash
+   git clone <your-repo-url>
+   cd NekoLive
+   npm install
+   ```
+
+2. **Start Development Server**
+   ```bash
+   npm run dev
+   ```
+
+3. **Open Application**
+   - Visit `https://localhost:8080` (note: HTTPS required for WebRTC)
+   - Enter a username and room name
+   - Share the room URL with others to join
+
+### Production Deployment
+
+#### Option 1: Traditional Server (AWS EC2)
+
+1. **Prepare Environment**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your production values
+   ```
+
+2. **Install Dependencies**
+   ```bash
+   npm ci --only=production
+   ```
+
+3. **Start Production Server**
+   ```bash
+   npm start
+   ```
+
+#### Option 2: AWS Lambda + S3 (Serverless)
+
+See [AWS Deployment Guide](#aws-deployment-guide) below for detailed instructions.
 
 ## 📁 Project Structure
 
 ```
-├── main.html              # Landing page with room join form
-├── room.html              # Video chat room interface with streaming features
-├── streams.js             # Enhanced WebRTC logic with chat and controls
-├── signaling-server.js    # Optional WebSocket signaling server
-├── package.json           # Node.js dependencies for signaling server
+NekoLive/
+├── main.html              # Landing page
+├── room.html              # Video chat interface
+├── streams.js             # Core WebRTC logic
+├── signaling-server.js    # WebSocket signaling server
+├── package.json           # Dependencies and scripts
+├── .env.example           # Environment configuration template
 ├── styles/
-│   ├── main.css          # Styles for landing page
-│   └── room.css          # Enhanced styles with chat and controls
-└── images/
-    ├── cat.gif           # Animated cat logo
-    ├── chat.svg          # Chat icon
-    ├── leave.svg         # Leave room icon
-    ├── microphone.svg    # Microphone toggle icon
-    └── video.svg         # Video toggle icon
+│   ├── main.css          # Landing page styles
+│   └── room.css          # Video chat styles
+├── images/               # UI icons and assets
+├── scripts/              # Deployment scripts
+└── docs/                # Documentation
 ```
 
-## 🚀 Setup
+## 🔧 Configuration
 
-### Quick Start (WebSocket signaling - Recommended)
-1. **Install Node.js** (if not already installed)
+### Environment Variables
+
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `NODE_ENV` | Environment mode | `development` | Yes |
+| `PORT` | Server port | `8080` | Yes |
+| `ALLOWED_ORIGINS` | CORS origins | `*` | Yes |
+| `RATE_LIMIT_REQUESTS` | Requests per window | `100` | No |
+| `RATE_LIMIT_WINDOW_MS` | Rate limit window | `60000` | No |
+
+### Server Configuration
+
+The signaling server supports:
+- **Rate Limiting**: Prevents abuse (100 requests/minute by default)
+- **CORS**: Configurable cross-origin resource sharing
+- **Health Checks**: `/health` and `/stats` endpoints
+- **Graceful Shutdown**: Proper cleanup on termination
+- **Session Management**: Automatic cleanup of dead connections
 2. **Run setup**: Double-click `setup.bat` or run `npm install`
 3. **Start signaling server**: Double-click `start-server.bat` or run `npm start`
 4. **Open the app**: Open `main.html` in your browser

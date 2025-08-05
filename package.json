@@ -1,24 +1,56 @@
 {
-  "name": "nekolive-webrtc-signaling",
-  "version": "1.0.0",
-  "description": "WebSocket signaling server for NekoLive WebRTC video chat",
+  "name": "nekolive-webrtc",
+  "version": "2.0.0",
+  "description": "Production-ready WebRTC video chat application with real-time messaging",
   "main": "signaling-server.js",
   "scripts": {
     "start": "node signaling-server.js",
-    "dev": "nodemon signaling-server.js"
+    "dev": "nodemon signaling-server.js",
+    "prod": "NODE_ENV=production node signaling-server.js",
+    "test": "echo \"Tests coming soon\" && exit 0",
+    "lint": "echo \"Linting coming soon\" && exit 0",
+    "build": "echo \"Build process for static files\" && exit 0",
+    "docker:build": "docker build -t nekolive .",
+    "docker:run": "docker run -p 8080:8080 --env-file .env nekolive",
+    "docker:compose": "docker-compose up -d",
+    "deploy:aws": "powershell -ExecutionPolicy Bypass -File deploy-aws.ps1",
+    "deploy:prod": "bash deploy-production.sh",
+    "health": "curl -f http://localhost:8080/health || exit 1",
+    "logs": "pm2 logs nikolive --lines 100"
   },
   "keywords": [
     "webrtc",
-    "signaling",
+    "video-chat",
+    "real-time",
+    "peer-to-peer",
     "websocket",
-    "video-chat"
+    "signaling",
+    "production-ready",
+    "aws",
+    "docker"
   ],
   "author": "RohanQ17",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/NekoLive.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/NekoLive/issues"
+  },
+  "homepage": "https://github.com/your-username/NekoLive#readme",
+  "engines": {
+    "node": ">=14.0.0",
+    "npm": ">=6.0.0"
+  },
   "dependencies": {
+    "dotenv": "^16.6.1",
     "ws": "^8.14.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
+  },
+  "optionalDependencies": {
+    "pm2": "^5.3.0"
   }
 }
