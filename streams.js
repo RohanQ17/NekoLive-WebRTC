@@ -36,6 +36,11 @@ const rtcConfiguration = {
             urls: 'turn:openrelay.metered.ca:443',
             username: 'openrelayproject',
             credential: 'openrelayproject'
+        },
+        {
+            urls: 'turn:relay1.expressturn.com:3478',
+            username: 'efb1b1c0',
+            credential: 'b1b1c0efb1b1c0efb1b1c0efb1b1c0ef'
         }
     ],
     iceCandidatePoolSize: 10
@@ -352,14 +357,17 @@ function createPeerConnection() {
     localStream.getTracks().forEach(track => {
         peerConnection.addTrack(track, localStream);
     });
-    
+
     // Handle remote tracks
     peerConnection.ontrack = (event) => {
+        console.log('ontrack event:', event);
         event.streams[0].getTracks().forEach(track => {
             remoteStream.addTrack(track);
+            console.log('Added remote track:', track);
         });
+        document.getElementById('user-2').srcObject = remoteStream;
     };
-    
+
     // Handle ICE candidates
     peerConnection.onicecandidate = (event) => {
         if (event.candidate) {
@@ -374,12 +382,16 @@ function createPeerConnection() {
             console.log('All ICE candidates have been sent');
         }
     };
-    
+
+    // Handle ICE connection state changes
+    peerConnection.oniceconnectionstatechange = () => {
+        console.log('ICE connection state:', peerConnection.iceConnectionState);
+    };
+
     // Handle connection state changes
     peerConnection.onconnectionstatechange = () => {
         console.log('Connection state:', peerConnection.connectionState);
         const state = peerConnection.connectionState;
-        
         if (state === 'connected') {
             showNotification('Connected to peer!', 'success');
         } else if (state === 'disconnected' || state === 'failed') {
