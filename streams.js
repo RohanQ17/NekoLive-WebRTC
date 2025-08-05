@@ -18,19 +18,24 @@ let uid = String(Math.floor(Math.random() * 10000));
 // WebSocket server configuration
 const WEBSOCKET_URL = 'wss://nekolive.app/ws'; // Production WebSocket URL
 
-// WebRTC configuration with STUN servers
+// WebRTC configuration with STUN and TURN servers
 const rtcConfiguration = {
     iceServers: [
         {
             urls: [
                 'stun:stun1.l.google.com:19302',
-                'stun:stun2.l.google.com:19302',
-                'stun:stun3.l.google.com:19302',
-                'stun:stun4.l.google.com:19302'
+                'stun:stun2.l.google.com:19302'
             ]
         },
         {
-            urls: ['stun:stun.l.google.com:19302']
+            urls: 'turn:openrelay.metered.ca:80',
+            username: 'openrelayproject',
+            credential: 'openrelayproject'
+        },
+        {
+            urls: 'turn:openrelay.metered.ca:443',
+            username: 'openrelayproject',
+            credential: 'openrelayproject'
         }
     ],
     iceCandidatePoolSize: 10
@@ -398,21 +403,28 @@ async function createOffer() {
 async function handleOffer(message) {
     try {
         console.log('Received offer from:', message.userId);
-        await peerConnection.setRemoteDescription(message.offer);
-        console.log('Remote description set');
+        console.log('Current signaling state:', peerConnection.signalingState);
         
-        const answer = await peerConnection.createAnswer();
-        await peerConnection.setLocalDescription(answer);
-        console.log('Answer created and set as local description');
-        
-        sendSignalingMessage({
-            type: 'answer',
-            answer: answer,
-            userId: uid,
-            roomName: roomName
-        });
-        
-        console.log('Answer created and sent');
+        // Only handle offer if we're in stable state or haven't set remote description
+        if (peerConnection.signalingState === 'stable' || peerConnection.signalingState === 'have-local-offer') {
+            await peerConnection.setRemoteDescription(message.offer);
+            console.log('Remote description set');
+            
+            const answer = await peerConnection.createAnswer();
+            await peerConnection.setLocalDescription(answer);
+            console.log('Answer created and set as local description');
+            
+            sendSignalingMessage({
+                type: 'answer',
+                answer: answer,
+                userId: uid,
+                roomName: roomName
+            });
+            
+            console.log('Answer created and sent');
+        } else {
+            console.warn('Ignoring offer - wrong signaling state:', peerConnection.signalingState);
+        }
     } catch (error) {
         console.error('Error handling offer:', error);
     }
@@ -422,8 +434,15 @@ async function handleOffer(message) {
 async function handleAnswer(message) {
     try {
         console.log('Received answer from:', message.userId);
-        await peerConnection.setRemoteDescription(message.answer);
-        console.log('Answer received and set');
+        console.log('Current signaling state:', peerConnection.signalingState);
+        
+        // Only set remote description if we're in the right state
+        if (peerConnection.signalingState === 'have-local-offer') {
+            await peerConnection.setRemoteDescription(message.answer);
+            console.log('Answer received and set');
+        } else {
+            console.warn('Ignoring answer - wrong signaling state:', peerConnection.signalingState);
+        }
     } catch (error) {
         console.error('Error handling answer:', error);
     }
