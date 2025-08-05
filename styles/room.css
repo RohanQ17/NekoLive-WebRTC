@@ -262,10 +262,15 @@ h3{
 }
 
 @media screen and (max-width: 768px){
+    .roompage {
+        padding: 10px;
+    }
+
     #video-streams{
         grid-template-columns: 1fr;
-        width: 95%;
+        width: 100%;
         height: 50vh;
+        gap: 1em;
     }
     
     #chat-container {
@@ -273,11 +278,15 @@ h3{
         height: 300px;
         right: 20px;
         left: 20px;
+        top: auto;
+        bottom: 80px;
     }
     
     .control-group {
         gap: 15px;
         padding: 12px 20px;
+        flex-wrap: wrap;
+        justify-content: center;
     }
     
     .control-icon {
@@ -288,6 +297,78 @@ h3{
     
     .control-label {
         font-size: 0.7em;
+    }
+
+    #room-name-wrapper {
+        margin-bottom: 10px;
+        text-align: center;
+    }
+
+    h3 {
+        font-size: 18px;
+        margin: 10px 0;
+    }
+}
+
+@media screen and (max-width: 480px){
+    .roompage {
+        padding: 5px;
+    }
+
+    #video-streams{
+        height: 45vh;
+        gap: 0.5em;
+        width: 100%;
+    }
+
+    .video-player{
+        border-radius: 8px;
+    }
+    
+    #chat-container {
+        height: 250px;
+        bottom: 70px;
+        right: 10px;
+        left: 10px;
+        width: calc(100vw - 20px);
+    }
+    
+    .control-group {
+        padding: 8px 10px;
+        gap: 10px;
+    }
+    
+    .control-icon {
+        height: 18px;
+        width: 18px;
+        padding: 8px;
+    }
+    
+    .control-label {
+        font-size: 0.6em;
+    }
+
+    #chat-messages {
+        max-height: 150px;
+    }
+
+    #chat-input {
+        font-size: 14px;
+        padding: 8px;
+    }
+
+    #send-btn {
+        padding: 8px 12px;
+        font-size: 14px;
+    }
+
+    h3 {
+        font-size: 16px;
+        margin: 5px 0;
+    }
+
+    #room-name-wrapper {
+        margin-bottom: 5px;
     }
 }
 

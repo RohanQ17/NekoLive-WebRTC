@@ -29,13 +29,10 @@ body *{
 }
 
 
-h1, h3, h4, h5, h6, strong{
+h1, h2, h3, h4, h5, h6, strong{
 	color: var(--mainText);
 	font-family: 'Russo One', sans-serif;
 	font-weight: 500;
-}
-h2 {
-
 }
 p, li, span, label, input, textarea{
 	color: var(--secondaryText);
@@ -282,9 +279,11 @@ h6 { font-size: 16px;}
 
 
 
+/* Responsive Design */
 @media screen and (max-width: 1200px){
 	.main-container{
 		width: 95%;
+		padding: 0 10px;
 	}
 }
 
@@ -296,24 +295,107 @@ h6 { font-size: 16px;}
 			'right-column'
 			'join'
 		;
+		min-height: auto;
+		padding: 20px;
+		margin: 10px;
 	}
 
 	.right-column{
 		justify-content: center;
 	}
 
+	.left-column{
+		padding-top: 20px;
+		padding-bottom: 20px;
+	}
+
+	#profile_pic{
+		height: 150px;
+		width: 150px;
+	}
+
+	h1 { font-size: 36px;}
+	h2 { font-size: 28px;}
+	h3 { font-size: 24px;}
+	h4 { font-size: 20px;}
+	h5 { font-size: 18px;}
+	h6 { font-size: 16px;}
+
+	.greeting-wrapper{
+		min-height: 6em;
+		max-height: 30em;
+		padding: 20px;
+	}
+}
+
+@media screen and (max-width: 600px) {
+	.main-container{
+		width: 100%;
+		padding: 0 5px;
+	}
+
+	.intro-wrapper{
+		margin: 5px;
+		padding: 15px;
+		border-radius: 10px;
+	}
+
+	#download{
+		width: 250px;
+		height: 45px;
+		font-size: 16px;
+	}
+
+	.greeting-wrapper{
+		padding: 15px;
+		min-height: 4em;
+	}
+
+	h1 { font-size: 32px;}
+	h2 { font-size: 24px;}
+	h3 { font-size: 20px;}
 }
 
 @media screen and (max-width: 400px) {
-    #preview-shadow {
-        max-width: 280px;
-        height: 180px;
-        padding-left: 10px;
-        padding-top: 10px;
-    }
+	.intro-wrapper{
+		padding: 10px;
+		margin: 2px;
+	}
 
-    #preview {
-        width: 280px;
+	#preview-shadow {
+		max-width: 250px;
+		height: 150px;
+		padding-left: 15px;
+		padding-top: 15px;
+	}
 
-    }
+	#preview {
+		width: 250px;
+		padding: 10px;
+	}
+
+	#profile_pic{
+		height: 120px;
+		width: 120px;
+	}
+
+	#download{
+		width: 200px;
+		height: 40px;
+		font-size: 14px;
+	}
+
+	.greeting-wrapper{
+		padding: 10px;
+		min-height: 3em;
+	}
+
+	h1 { font-size: 28px;}
+	h2 { font-size: 20px;}
+	h3 { font-size: 18px;}
+
+	.left-column, .right-column{
+		padding-top: 15px;
+		padding-bottom: 15px;
+	}
 }
