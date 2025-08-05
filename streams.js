@@ -10,9 +10,13 @@ let userName;
 let isMuted = false;
 let isVideoOff = false;
 let isChatOpen = false;
+let useWebSocket = true; // Set to false to use localStorage
 
 // Generate unique user ID
 let uid = String(Math.floor(Math.random() * 10000));
+
+// WebSocket server configuration
+const WEBSOCKET_URL = 'ws://localhost:8080'; // Change this to your server URL
 
 // WebRTC configuration with STUN servers
 const rtcConfiguration = {
@@ -36,8 +40,12 @@ let init = async () => {
         localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         document.getElementById('user-1').srcObject = localStream;
         
-        // Initialize signaling (using localStorage for demo - replace with WebSocket in production)
-        initializeSignaling();
+        // Initialize signaling
+        if (useWebSocket) {
+            await initializeWebSocketSignaling();
+        } else {
+            initializeLocalStorageSignaling();
+        }
         
         // Create peer connection
         createPeerConnection();
@@ -57,25 +65,106 @@ let init = async () => {
     }
 };
 
-// Initialize signaling mechanism (simplified localStorage approach)
-function initializeSignaling() {
+// Initialize WebSocket signaling
+async function initializeWebSocketSignaling() {
+    try {
+        socket = new WebSocket(WEBSOCKET_URL);
+        
+        socket.onopen = () => {
+            console.log('WebSocket connected');
+            // Join room
+            sendWebSocketMessage({
+                type: 'join-room',
+                roomName: roomName
+            });
+            
+            // Announce presence
+            sendWebSocketMessage({
+                type: 'user-joined',
+                userId: uid,
+                userName: userName,
+                roomName: roomName
+            });
+            
+            showNotification('Connected to signaling server', 'success');
+        };
+        
+        socket.onmessage = (event) => {
+            const message = JSON.parse(event.data);
+            handleSignalingMessage(message);
+        };
+        
+        socket.onclose = () => {
+            console.log('WebSocket disconnected');
+            showNotification('Disconnected from signaling server. Retrying...', 'error');
+            // Retry connection after 3 seconds
+            setTimeout(() => {
+                if (!socket || socket.readyState === WebSocket.CLOSED) {
+                    initializeWebSocketSignaling();
+                }
+            }, 3000);
+        };
+        
+        socket.onerror = (error) => {
+            console.error('WebSocket error:', error);
+            showNotification('Signaling server connection failed. Falling back to localStorage...', 'error');
+            useWebSocket = false;
+            initializeLocalStorageSignaling();
+        };
+        
+    } catch (error) {
+        console.error('Failed to connect to WebSocket:', error);
+        showNotification('WebSocket unavailable. Using localStorage signaling...', 'error');
+        useWebSocket = false;
+        initializeLocalStorageSignaling();
+    }
+}
+
+// Initialize localStorage signaling (fallback)
+function initializeLocalStorageSignaling() {
     // Listen for storage events (messages from other tabs/windows)
-    window.addEventListener('storage', handleSignalingMessage);
+    window.addEventListener('storage', (event) => {
+        if (event.key !== `webrtc-${roomName}`) return;
+        
+        const message = JSON.parse(event.newValue);
+        // Ignore messages from self
+        if (message.userId === uid) return;
+        
+        handleSignalingMessage(message);
+    });
     
     // Announce presence in room
-    sendSignalingMessage({
+    sendLocalStorageMessage({
         type: 'user-joined',
         userId: uid,
         userName: userName,
         roomName: roomName
     });
+    
+    showNotification('Using localStorage signaling (same browser only)', 'info');
+}
+
+// Send WebSocket message
+function sendWebSocketMessage(message) {
+    if (socket && socket.readyState === WebSocket.OPEN) {
+        message.timestamp = Date.now();
+        socket.send(JSON.stringify(message));
+    }
+}
+
+// Send localStorage message
+function sendLocalStorageMessage(message) {
+    message.timestamp = Date.now();
+    localStorage.setItem(`webrtc-${roomName}`, JSON.stringify(message));
 }
 
 // Handle incoming signaling messages
-function handleSignalingMessage(event) {
-    if (event.key !== `webrtc-${roomName}`) return;
-    
-    const message = JSON.parse(event.newValue);
+function handleSignalingMessage(message) {
+    // For localStorage, we need to check the event structure
+    if (message.key && message.newValue) {
+        if (message.key !== `webrtc-${roomName}`) return;
+        message = JSON.parse(message.newValue);
+    }
     
     // Ignore messages from self
     if (message.userId === uid) return;
@@ -104,19 +193,32 @@ function handleSignalingMessage(event) {
     }
 }
 
-// Send signaling message
+// Send signaling message (unified function)
 function sendSignalingMessage(message) {
-    message.timestamp = Date.now();
-    localStorage.setItem(`webrtc-${roomName}`, JSON.stringify(message));
+    if (useWebSocket) {
+        sendWebSocketMessage(message);
+    } else {
+        sendLocalStorageMessage(message);
+    }
 }
 
 // Handle when a user joins
 async function handleUserJoined(message) {
     console.log('User joined:', message.userName);
     
+    displayChatMessage({
+        type: 'system',
+        content: `${message.userName} joined the room`,
+        timestamp: new Date().toLocaleTimeString()
+    }, false);
+    
+    showNotification(`${message.userName} joined the room`, 'success');
+    
     // Create offer if we're the initiator (lower user ID)
     if (uid < message.userId) {
-        await createOffer();
+        setTimeout(() => {
+            createOffer();
+        }, 1000); // Small delay to ensure peer connection is ready
     }
 }
 
@@ -449,6 +551,9 @@ function leaveRoom() {
     }
     if (localStream) {
         localStream.getTracks().forEach(track => track.stop());
+    }
+    if (socket) {
+        socket.close();
     }
     
     // Clean up session storage

@@ -46,13 +46,19 @@ A comprehensive video chatroom application built with vanilla HTML, CSS, and Jav
 
 ## 🚀 Setup
 
-### Basic Setup (localStorage signaling)
-1. Clone this repository
-2. Open `main.html` in a web browser
-3. Enter a username and room name to start a video chat
-4. Open another tab/window with the same room name to test
+### Quick Start (WebSocket signaling - Recommended)
+1. **Install Node.js** (if not already installed)
+2. **Run setup**: Double-click `setup.bat` or run `npm install`
+3. **Start signaling server**: Double-click `start-server.bat` or run `npm start`
+4. **Open the app**: Open `main.html` in your browser
+5. **Test**: Open another browser/device and connect to the same room
 
-### Advanced Setup (WebSocket signaling)
+### Alternative Setup (localStorage signaling - Same browser only)
+1. Open `streams.js` and change `let useWebSocket = false;`
+2. Open `main.html` in a web browser
+3. Open another tab/window with the same room name to test
+
+### Manual Setup (Advanced)
 1. Install Node.js dependencies:
    ```bash
    npm install
@@ -60,9 +66,10 @@ A comprehensive video chatroom application built with vanilla HTML, CSS, and Jav
 2. Start the signaling server:
    ```bash
    npm start
+   # or
+   node signaling-server.js
    ```
-3. Update `streams.js` to use WebSocket instead of localStorage
-4. Open `main.html` in a web browser
+3. Open `main.html` in a web browser
 
 ## 🎮 Usage
 
@@ -101,17 +108,18 @@ The application automatically adapts to different screen sizes:
 
 ## 🔧 Signaling Methods
 
-### Current: localStorage (Demo)
+### Current: WebSocket (Production Ready) ⭐
+- ✅ Enables connection between different browsers/devices/networks
+- ✅ Real-time synchronization across all platforms
+- ✅ Includes automatic reconnection and error handling
+- ✅ Supports multiple rooms simultaneously
+- ⚙️ Requires running the included signaling server
+
+### Fallback: localStorage (Demo)
 - ✅ Works for multiple tabs/windows on the same origin
 - ✅ Perfect for testing and development
 - ✅ No server required
-- ✅ Includes chat messaging fallback
-
-### Optional: WebSocket (Production)
-- ✅ Enables connection between different devices/networks
-- ✅ Requires running the included signaling server
-- ✅ Better scalability for real-world use
-- ✅ Real-time synchronization
+- ❌ Limited to same browser/device only
 
 ## 🎨 UI Features
 
