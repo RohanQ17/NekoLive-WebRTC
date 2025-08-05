@@ -22,9 +22,18 @@ const WEBSOCKET_URL = 'wss://nekolive.app/ws'; // Production WebSocket URL
 const rtcConfiguration = {
     iceServers: [
         {
-            urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302']
+            urls: [
+                'stun:stun1.l.google.com:19302',
+                'stun:stun2.l.google.com:19302',
+                'stun:stun3.l.google.com:19302',
+                'stun:stun4.l.google.com:19302'
+            ]
+        },
+        {
+            urls: ['stun:stun.l.google.com:19302']
         }
-    ]
+    ],
+    iceCandidatePoolSize: 10
 };
 
 // Initialize WebRTC connection
@@ -36,9 +45,39 @@ let init = async () => {
         
         console.log(`Initializing WebRTC for user: ${userName} in room: ${roomName}`);
         
-        // Get user media
-        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-        document.getElementById('user-1').srcObject = localStream;
+        // Get user media with enhanced error handling
+        try {
+            console.log('Requesting camera and microphone access...');
+            localStream = await navigator.mediaDevices.getUserMedia({ 
+                video: { 
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 },
+                    frameRate: { ideal: 30 }
+                }, 
+                audio: {
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    autoGainControl: true
+                }
+            });
+            console.log('✅ Media access granted');
+            document.getElementById('user-1').srcObject = localStream;
+        } catch (mediaError) {
+            console.error('❌ Media access failed:', mediaError);
+            showNotification(`Camera/Microphone access denied: ${mediaError.message}`, 'error');
+            
+            // Try audio-only fallback
+            try {
+                console.log('Trying audio-only fallback...');
+                localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                document.getElementById('user-1').srcObject = localStream;
+                showNotification('Using audio-only mode', 'warning');
+            } catch (audioError) {
+                console.error('❌ Audio access also failed:', audioError);
+                showNotification('No media access available', 'error');
+                return;
+            }
+        }
         
         // Initialize signaling
         if (useWebSocket) {
