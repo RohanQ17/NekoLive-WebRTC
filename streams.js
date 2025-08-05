@@ -16,7 +16,7 @@ let useWebSocket = true; // Set to false to use localStorage
 let uid = String(Math.floor(Math.random() * 10000));
 
 // WebSocket server configuration
-const WEBSOCKET_URL = 'ws://localhost:8080'; // Change this to your server URL
+const WEBSOCKET_URL = 'wss://nekolive.app/ws'; // Production WebSocket URL
 
 // WebRTC configuration with STUN servers
 const rtcConfiguration = {
