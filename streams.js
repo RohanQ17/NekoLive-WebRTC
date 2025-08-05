@@ -295,8 +295,18 @@ async function handleUserJoined(message) {
     
     showNotification(`${message.userName} joined the room`, 'success');
     
-    // Create offer if we're the initiator (lower user ID)
-    if (uid < message.userId) {
+    // Ensure both user IDs are numbers for comparison
+    let myIdNum = Number(uid);
+    let otherIdNum = Number(message.userId);
+    let isNumeric = !isNaN(myIdNum) && !isNaN(otherIdNum);
+    let iAmInitiator = false;
+    if (isNumeric) {
+        iAmInitiator = myIdNum < otherIdNum;
+    } else {
+        // Fallback to string comparison if IDs are not numbers
+        iAmInitiator = String(uid) < String(message.userId);
+    }
+    if (iAmInitiator) {
         console.log('I am the initiator - creating offer in 1 second...');
         setTimeout(() => {
             createOffer();
