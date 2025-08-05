@@ -2,7 +2,7 @@
 # PowerShell script for Windows deployment preparation
 
 param(
-    [string]$Domain = "your-domain.com",
+    [string]$Domain = "nekolive.app",
     [string]$Region = "us-east-1",
     [string]$InstanceType = "t3.small"
 )

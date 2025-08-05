@@ -1,6 +1,6 @@
 # NekoLive - Pure WebRTC Video Chat Application
 
-[![Live Demo](https://img.shields.io/badge/Live-Demo-blue)](https://your-domain.com)
+[![Live Demo](https://img.shields.io/badge/Live-Demo-blue)](https://nekolive.app)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-14%2B-green)](https://nodejs.org)
 
