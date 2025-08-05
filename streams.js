@@ -110,7 +110,9 @@ async function initializeWebSocketSignaling() {
         socket = new WebSocket(WEBSOCKET_URL);
         
         socket.onopen = () => {
-            console.log('WebSocket connected');
+            console.log('WebSocket connected to:', WEBSOCKET_URL);
+            console.log('User ID:', uid, 'User Name:', userName, 'Room:', roomName);
+            
             // Join room
             sendWebSocketMessage({
                 type: 'join-room',
@@ -126,10 +128,13 @@ async function initializeWebSocketSignaling() {
             });
             
             showNotification('Connected to signaling server', 'success');
+            console.log('Sent join-room and user-joined messages');
         };
         
         socket.onmessage = (event) => {
+            console.log('Received WebSocket message:', event.data);
             const message = JSON.parse(event.data);
+            console.log('Parsed message:', message);
             handleSignalingMessage(message);
         };
         
@@ -187,7 +192,10 @@ function initializeLocalStorageSignaling() {
 function sendWebSocketMessage(message) {
     if (socket && socket.readyState === WebSocket.OPEN) {
         message.timestamp = Date.now();
+        console.log('Sending WebSocket message:', message);
         socket.send(JSON.stringify(message));
+    } else {
+        console.error('Cannot send message - WebSocket not connected. State:', socket ? socket.readyState : 'socket is null');
     }
 }
 
@@ -243,7 +251,7 @@ function sendSignalingMessage(message) {
 
 // Handle when a user joins
 async function handleUserJoined(message) {
-    console.log('User joined:', message.userName);
+    console.log('User joined:', message.userName, 'User ID:', message.userId, 'My ID:', uid);
     
     displayChatMessage({
         type: 'system',
@@ -255,9 +263,12 @@ async function handleUserJoined(message) {
     
     // Create offer if we're the initiator (lower user ID)
     if (uid < message.userId) {
+        console.log('I am the initiator - creating offer in 1 second...');
         setTimeout(() => {
             createOffer();
         }, 1000); // Small delay to ensure peer connection is ready
+    } else {
+        console.log('I am not the initiator - waiting for offer...');
     }
 }
 
@@ -308,12 +319,15 @@ function createPeerConnection() {
     // Handle ICE candidates
     peerConnection.onicecandidate = (event) => {
         if (event.candidate) {
+            console.log('Sending ICE candidate:', event.candidate);
             sendSignalingMessage({
                 type: 'ice-candidate',
                 candidate: event.candidate,
                 userId: uid,
                 roomName: roomName
             });
+        } else {
+            console.log('All ICE candidates have been sent');
         }
     };
     
@@ -333,8 +347,10 @@ function createPeerConnection() {
 // Create and send offer
 async function createOffer() {
     try {
+        console.log('Creating offer...');
         const offer = await peerConnection.createOffer();
         await peerConnection.setLocalDescription(offer);
+        console.log('Offer created and set as local description:', offer);
         
         sendSignalingMessage({
             type: 'offer',
@@ -352,10 +368,13 @@ async function createOffer() {
 // Handle incoming offer
 async function handleOffer(message) {
     try {
+        console.log('Received offer from:', message.userId);
         await peerConnection.setRemoteDescription(message.offer);
+        console.log('Remote description set');
         
         const answer = await peerConnection.createAnswer();
         await peerConnection.setLocalDescription(answer);
+        console.log('Answer created and set as local description');
         
         sendSignalingMessage({
             type: 'answer',
@@ -373,6 +392,7 @@ async function handleOffer(message) {
 // Handle incoming answer
 async function handleAnswer(message) {
     try {
+        console.log('Received answer from:', message.userId);
         await peerConnection.setRemoteDescription(message.answer);
         console.log('Answer received and set');
     } catch (error) {
@@ -383,8 +403,9 @@ async function handleAnswer(message) {
 // Handle incoming ICE candidate
 async function handleIceCandidate(message) {
     try {
+        console.log('Received ICE candidate from:', message.userId);
         await peerConnection.addIceCandidate(message.candidate);
-        console.log('ICE candidate added');
+        console.log('ICE candidate added successfully');
     } catch (error) {
         console.error('Error adding ICE candidate:', error);
     }
