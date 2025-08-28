@@ -57,6 +57,11 @@ export default function handler(req) {
         const roomName = (msg.roomName || '').toString();
         if (!roomName || roomName.length > 50) return;
 
+        // Adopt client-provided identity if present
+        if (typeof msg.userId === 'string' && msg.userId.length > 0) {
+          server.userId = msg.userId;
+        }
+
         if (!rooms.has(roomName)) {
           rooms.set(roomName, new Set());
         }

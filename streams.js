@@ -10,19 +10,15 @@ let userName;
 let isMuted = false;
 let isVideoOff = false;
 let isChatOpen = false;
-let useWebSocket = !USE_HTTP_POLLING; // Set to false to use localStorage or HTTP polling
+let useWebSocket = true; // Set to false to use localStorage
 
 // Generate unique user ID
 let uid = String(Math.floor(Math.random() * 10000));
 
 // WebSocket server configuration
-// For Vercel deployment, use HTTP polling instead of WebSockets
-const USE_HTTP_POLLING = true;
-const POLLING_URL = (typeof location !== 'undefined')
-    ? `https://${location.host}/api/ws`
-    : 'https://your-vercel-domain.vercel.app/api/ws';
+// For Vercel, use Edge Function endpoint and match scheme to current page (ws for http, wss for https)
 const WEBSOCKET_URL = (typeof location !== 'undefined')
-    ? `wss://${location.host}/api/ws`
+    ? `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/api/ws`
     : 'wss://your-vercel-domain.vercel.app/api/ws';
 // If hosting signaling on EC2 instead, set:
 // const WEBSOCKET_URL = 'wss://signal.yourdomain.com/ws';
@@ -80,7 +76,10 @@ let init = async () => {
                 }
             });
             console.log('✅ Media access granted');
-            document.getElementById('user-1').srcObject = localStream;
+            const localVideo = document.getElementById('user-1');
+            localVideo.srcObject = localStream;
+            // Ensure playback starts where required (some browsers need an explicit play())
+            try { await localVideo.play(); } catch (_) {}
         } catch (mediaError) {
             console.error('❌ Media access failed:', mediaError);
             showNotification(`Camera/Microphone access denied: ${mediaError.message}`, 'error');
@@ -101,8 +100,6 @@ let init = async () => {
         // Initialize signaling
         if (useWebSocket) {
             await initializeWebSocketSignaling();
-        } else if (USE_HTTP_POLLING) {
-            await initializeHttpPollingSignaling();
         } else {
             initializeLocalStorageSignaling();
         }
@@ -137,22 +134,16 @@ async function initializeWebSocketSignaling() {
             console.log('WebSocket connected to:', WEBSOCKET_URL);
             console.log('User ID:', uid, 'User Name:', userName, 'Room:', roomName);
             
-            // Join room
+            // Join room with identity (server will broadcast user-joined)
             sendWebSocketMessage({
                 type: 'join-room',
-                roomName: roomName
-            });
-            
-            // Announce presence
-            sendWebSocketMessage({
-                type: 'user-joined',
+                roomName: roomName,
                 userId: uid,
-                userName: userName,
-                roomName: roomName
+                userName: userName
             });
             
             showNotification('Connected to signaling server', 'success');
-            console.log('Sent join-room and user-joined messages');
+            console.log('Sent join-room');
         };
         
         socket.onmessage = (event) => {
@@ -201,24 +192,16 @@ async function initializeWebSocketSignaling() {
         
         socket.onerror = (error) => {
             console.error('WebSocket error:', error);
-            showNotification('Signaling server connection failed. Switching to HTTP polling...', 'error');
+            showNotification('Signaling server connection failed. Falling back to localStorage...', 'error');
             useWebSocket = false;
-            if (USE_HTTP_POLLING) {
-                initializeHttpPollingSignaling();
-            } else {
-                initializeLocalStorageSignaling();
-            }
+            initializeLocalStorageSignaling();
         };
         
     } catch (error) {
         console.error('Failed to connect to WebSocket:', error);
-        showNotification('WebSocket unavailable. Using HTTP polling...', 'error');
+        showNotification('WebSocket unavailable. Using localStorage signaling...', 'error');
         useWebSocket = false;
-        if (USE_HTTP_POLLING) {
-            initializeHttpPollingSignaling();
-        } else {
-            initializeLocalStorageSignaling();
-        }
+        initializeLocalStorageSignaling();
     }
 }
 
@@ -246,58 +229,6 @@ function initializeLocalStorageSignaling() {
     showNotification('Using localStorage signaling (same browser only)', 'info');
 }
 
-// Initialize HTTP polling signaling (for Vercel Edge)
-let lastMessageTime = 0;
-let pollingInterval;
-
-async function initializeHttpPollingSignaling() {
-    console.log('Using HTTP polling signaling');
-    
-    // Start polling for messages
-    pollingInterval = setInterval(pollForMessages, 1000); // Poll every second
-    
-    // Announce presence
-    await sendHttpMessage({
-        type: 'user-joined',
-        userId: uid,
-        userName: userName,
-        roomName: roomName
-    });
-    
-    showNotification('Connected via HTTP polling', 'success');
-}
-
-async function pollForMessages() {
-    try {
-        const response = await fetch(`${POLLING_URL}?room=${encodeURIComponent(roomName)}&since=${lastMessageTime}`);
-        if (!response.ok) return;
-        
-        const data = await response.json();
-        if (data.messages && data.messages.length > 0) {
-            for (const message of data.messages) {
-                lastMessageTime = Math.max(lastMessageTime, message.timestamp);
-                handleSignalingMessage(message);
-            }
-        }
-    } catch (error) {
-        console.error('Polling error:', error);
-    }
-}
-
-async function sendHttpMessage(message) {
-    try {
-        const response = await fetch(`${POLLING_URL}?room=${encodeURIComponent(roomName)}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(message)
-        });
-        console.log('Sent HTTP message:', message);
-        return response.ok;
-    } catch (error) {
-        console.error('Error sending HTTP message:', error);
-        return false;
-    }
-}
 
 // Send WebSocket message
 function sendWebSocketMessage(message) {
@@ -355,8 +286,6 @@ function handleSignalingMessage(message) {
 function sendSignalingMessage(message) {
     if (useWebSocket) {
         sendWebSocketMessage(message);
-    } else if (USE_HTTP_POLLING) {
-        sendHttpMessage(message);
     } else {
         sendLocalStorageMessage(message);
     }
@@ -440,7 +369,9 @@ function createPeerConnection() {
             remoteStream.addTrack(track);
             console.log('Added remote track:', track);
         });
-        document.getElementById('user-2').srcObject = remoteStream;
+        const remoteVideo = document.getElementById('user-2');
+        remoteVideo.srcObject = remoteStream;
+        try { remoteVideo.play(); } catch (_) {}
     };
 
     // Handle ICE candidates
@@ -780,9 +711,6 @@ function leaveRoom() {
     }
     if (socket) {
         socket.close();
-    }
-    if (pollingInterval) {
-        clearInterval(pollingInterval);
     }
     
     // Clean up session storage
