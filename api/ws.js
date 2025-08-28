@@ -1,59 +1,69 @@
-export const runtime = 'edge';
-
-const rooms = new Map(); // roomName -> Set of sockets
+// Simple HTTP-based signaling for Vercel Edge (WebSocket not supported)
+const messages = new Map(); // roomName -> array of messages
+const MESSAGE_LIMIT = 50; // Keep last 50 messages per room
 
 export default async function handler(req) {
-  if (req.headers.get('upgrade') !== 'websocket') {
-    return new Response('OK', { status: 200, headers: { 'content-type': 'text/plain' } });
+  const url = new URL(req.url);
+  const roomName = url.searchParams.get('room') || 'default';
+  const method = req.method;
+
+  // CORS headers
+  const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+  };
+
+  if (method === 'OPTIONS') {
+    return new Response(null, { status: 200, headers: corsHeaders });
   }
 
-  const pair = new WebSocketPair();
-  const [client, server] = [pair[0], pair[1]];
-
-  server.accept();
-  server.userId = Math.random().toString(36).slice(2);
-  server.roomName = null;
-
-  server.addEventListener('message', (event) => {
+  if (method === 'POST') {
+    // Send message to room
     try {
-      const data = JSON.parse(typeof event.data === 'string' ? event.data : new TextDecoder().decode(event.data));
-      const type = data.type;
-      const roomName = data.roomName;
-
-      if (!type) return;
-
-      if (type === 'join-room') {
-        if (!roomName || typeof roomName !== 'string') return;
-        // leave previous room
-        if (server.roomName && rooms.has(server.roomName)) {
-          rooms.get(server.roomName).delete(server);
-        }
-        server.roomName = roomName;
-        if (!rooms.has(roomName)) rooms.set(roomName, new Set());
-        rooms.get(roomName).add(server);
-        return;
+      const data = await req.json();
+      if (!messages.has(roomName)) {
+        messages.set(roomName, []);
       }
-
-      // broadcast to room (except sender)
-      if (server.roomName && rooms.has(server.roomName)) {
-        const payload = JSON.stringify({ ...data, timestamp: Date.now() });
-        rooms.get(server.roomName).forEach(sock => {
-          if (sock !== server) {
-            try { sock.send(payload); } catch {}
-          }
-        });
+      
+      const roomMessages = messages.get(roomName);
+      roomMessages.push({
+        ...data,
+        timestamp: Date.now(),
+        id: Math.random().toString(36).slice(2)
+      });
+      
+      // Keep only recent messages
+      if (roomMessages.length > MESSAGE_LIMIT) {
+        roomMessages.splice(0, roomMessages.length - MESSAGE_LIMIT);
       }
-    } catch (e) {
-      // ignore
+      
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    } catch (error) {
+      return new Response(JSON.stringify({ error: 'Invalid JSON' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
     }
-  });
+  }
 
-  server.addEventListener('close', () => {
-    if (server.roomName && rooms.has(server.roomName)) {
-      rooms.get(server.roomName).delete(server);
-      if (rooms.get(server.roomName).size === 0) rooms.delete(server.roomName);
-    }
-  });
+  if (method === 'GET') {
+    // Poll for messages
+    const since = parseInt(url.searchParams.get('since')) || 0;
+    const roomMessages = messages.get(roomName) || [];
+    const newMessages = roomMessages.filter(msg => msg.timestamp > since);
+    
+    return new Response(JSON.stringify({ messages: newMessages }), {
+      status: 200,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    });
+  }
 
-  return new Response(null, { status: 101, webSocket: client });
+  return new Response('Method not allowed', { 
+    status: 405, 
+    headers: corsHeaders 
+  });
 }
