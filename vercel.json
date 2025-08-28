@@ -12,5 +12,10 @@
         { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
       ]
     }
-  ]
+  ],
+  "functions": {
+    "api/ws.js": {
+      "runtime": "edge"
+    }
+  }
 }
