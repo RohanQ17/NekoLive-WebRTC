@@ -18,6 +18,9 @@ let uid = String(Math.floor(Math.random() * 10000));
 // WebSocket server configuration
 const WEBSOCKET_URL = 'wss://nekolive.app/ws'; // Production WebSocket URL
 
+// Allow forcing TURN-only via query (?forceTurn=1) or sessionStorage('forceTurn'='1')
+const FORCE_TURN = /[?&]forceTurn=1/i.test(window.location.search) || sessionStorage.getItem('forceTurn') === '1';
+
 // WebRTC configuration with STUN and TURN servers
 const rtcConfiguration = {
     iceServers: [
@@ -37,13 +40,10 @@ const rtcConfiguration = {
             username: 'openrelayproject',
             credential: 'openrelayproject'
         },
-        {
-            urls: 'turn:relay1.expressturn.com:3478',
-            username: 'efb1b1c0',
-            credential: 'b1b1c0efb1b1c0efb1b1c0efb1b1c0ef'
-        }
+        // NOTE: Add your own TURN service here for production reliability
     ],
-    iceCandidatePoolSize: 10
+    iceCandidatePoolSize: 10,
+    ...(FORCE_TURN ? { iceTransportPolicy: 'relay' } : {})
 };
 
 // Initialize WebRTC connection
@@ -324,6 +324,7 @@ async function handleUserJoined(message) {
 // Create peer connection
 function createPeerConnection() {
     peerConnection = new RTCPeerConnection(rtcConfiguration);
+    let attemptedIceRestart = false;
     
     // Create data channel for chat
     dataChannel = peerConnection.createDataChannel('chat', {
@@ -384,18 +385,39 @@ function createPeerConnection() {
     };
 
     // Handle ICE connection state changes
-    peerConnection.oniceconnectionstatechange = () => {
-        console.log('ICE connection state:', peerConnection.iceConnectionState);
+    peerConnection.oniceconnectionstatechange = async () => {
+        const state = peerConnection.iceConnectionState;
+        console.log('ICE connection state:', state);
+        // Try a one-time ICE restart if we fail/disconnect
+        if ((state === 'failed' || state === 'disconnected') && !attemptedIceRestart) {
+            attemptedIceRestart = true;
+            console.warn('Attempting ICE restart...');
+            try {
+                const offer = await peerConnection.createOffer({ iceRestart: true });
+                await peerConnection.setLocalDescription(offer);
+                sendSignalingMessage({
+                    type: 'offer',
+                    offer,
+                    userId: uid,
+                    roomName
+                });
+                console.log('ICE restart offer sent');
+            } catch (e) {
+                console.error('ICE restart failed:', e);
+            }
+        }
     };
 
     // Handle connection state changes
     peerConnection.onconnectionstatechange = () => {
-        console.log('Connection state:', peerConnection.connectionState);
         const state = peerConnection.connectionState;
+        console.log('Connection state:', state);
         if (state === 'connected') {
             showNotification('Connected to peer!', 'success');
-        } else if (state === 'disconnected' || state === 'failed') {
+        } else if (state === 'disconnected') {
             showNotification('Connection lost. Trying to reconnect...', 'error');
+        } else if (state === 'failed') {
+            showNotification('Connection failed. If this persists, enable TURN-only with ?forceTurn=1', 'error');
         }
     };
 }
