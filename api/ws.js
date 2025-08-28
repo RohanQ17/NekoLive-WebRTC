@@ -1,69 +1,118 @@
-// Simple HTTP-based signaling for Vercel Edge (WebSocket not supported)
-const messages = new Map(); // roomName -> array of messages
-const MESSAGE_LIMIT = 50; // Keep last 50 messages per room
+export const config = { runtime: 'edge' };
 
-export default async function handler(req) {
-  const url = new URL(req.url);
-  const roomName = url.searchParams.get('room') || 'default';
-  const method = req.method;
+// In-memory room registry for this Edge function instance.
+// Note: Edge instances can scale; this state is not shared across regions/instances.
+// For production-grade multi-instance signaling, back this with a shared store (e.g., Redis pub/sub).
+const rooms = globalThis.__nekolive_rooms || new Map();
+globalThis.__nekolive_rooms = rooms;
 
-  // CORS headers
-  const corsHeaders = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type',
+function jsonSafeParse(str) {
+  try {
+    return JSON.parse(str);
+  } catch (_) {
+    return null;
+  }
+}
+
+export default function handler(req) {
+  // Require WebSocket upgrade
+  if (req.headers.get('upgrade') !== 'websocket') {
+    return new Response('Expected a WebSocket upgrade request', { status: 400 });
+  }
+
+  // Create a WebSocket pair (client<->server)
+  const { 0: client, 1: server } = new WebSocketPair();
+
+  // Accept the server-side socket
+  server.accept();
+
+  // Per-connection state
+  server.sessionId = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+  server.userId = Math.random().toString(36).slice(2);
+  server.roomName = null;
+
+  // Helper to broadcast to everyone else in the same room
+  const broadcastToRoom = (roomName, fromSocket, data) => {
+    const room = rooms.get(roomName);
+    if (!room) return;
+    let sent = 0;
+    room.forEach((ws) => {
+      if (ws !== fromSocket) {
+        try {
+          ws.send(data);
+          sent++;
+        } catch {}
+      }
+    });
+    return sent;
   };
 
-  if (method === 'OPTIONS') {
-    return new Response(null, { status: 200, headers: corsHeaders });
-  }
+  // Handle messages from the client
+  server.addEventListener('message', (event) => {
+    const msg = typeof event.data === 'string' ? jsonSafeParse(event.data) : null;
+    if (!msg || typeof msg.type !== 'string') return;
 
-  if (method === 'POST') {
-    // Send message to room
-    try {
-      const data = await req.json();
-      if (!messages.has(roomName)) {
-        messages.set(roomName, []);
+    switch (msg.type) {
+      case 'join-room': {
+        const roomName = (msg.roomName || '').toString();
+        if (!roomName || roomName.length > 50) return;
+
+        if (!rooms.has(roomName)) {
+          rooms.set(roomName, new Set());
+        }
+        const room = rooms.get(roomName);
+        room.add(server);
+        server.roomName = roomName;
+
+        // Notify others in the room (mirrors Node server behavior)
+        const joinMessage = JSON.stringify({
+          type: 'user-joined',
+          userId: server.userId,
+          userName: msg.userName || 'User',
+          roomName,
+          timestamp: Date.now(),
+        });
+        broadcastToRoom(roomName, server, joinMessage);
+        break;
       }
-      
-      const roomMessages = messages.get(roomName);
-      roomMessages.push({
-        ...data,
+
+      default: {
+        // Relay any other signaling message to the rest of the room
+        if (server.roomName) {
+          broadcastToRoom(server.roomName, server, event.data);
+        }
+        break;
+      }
+    }
+  });
+
+  // Cleanup on disconnect/error
+  const cleanup = () => {
+    if (!server.roomName) return;
+    const room = rooms.get(server.roomName);
+    if (!room) return;
+
+    room.delete(server);
+
+    if (room.size === 0) {
+      rooms.delete(server.roomName);
+    } else {
+      const leaveMessage = JSON.stringify({
+        type: 'user-left',
+        userId: server.userId,
+        userName: 'User',
+        roomName: server.roomName,
         timestamp: Date.now(),
-        id: Math.random().toString(36).slice(2)
       });
-      
-      // Keep only recent messages
-      if (roomMessages.length > MESSAGE_LIMIT) {
-        roomMessages.splice(0, roomMessages.length - MESSAGE_LIMIT);
-      }
-      
-      return new Response(JSON.stringify({ success: true }), {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    } catch (error) {
-      return new Response(JSON.stringify({ error: 'Invalid JSON' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      room.forEach((ws) => {
+        try { ws.send(leaveMessage); } catch {}
       });
     }
-  }
+  };
 
-  if (method === 'GET') {
-    // Poll for messages
-    const since = parseInt(url.searchParams.get('since')) || 0;
-    const roomMessages = messages.get(roomName) || [];
-    const newMessages = roomMessages.filter(msg => msg.timestamp > since);
-    
-    return new Response(JSON.stringify({ messages: newMessages }), {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
-  }
+  server.addEventListener('close', cleanup);
+  server.addEventListener('error', cleanup);
 
-  return new Response('Method not allowed', { 
-    status: 405, 
-    headers: corsHeaders 
-  });
+  // Return the client end to the browser and complete the upgrade
+  return new Response(null, { status: 101, webSocket: client });
 }
