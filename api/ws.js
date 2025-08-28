@@ -1,12 +1,10 @@
-export const config = {
-  runtime: 'edge'
-};
+export const runtime = 'edge';
 
 const rooms = new Map(); // roomName -> Set of sockets
 
 export default async function handler(req) {
   if (req.headers.get('upgrade') !== 'websocket') {
-    return new Response('Expected a WebSocket connection', { status: 400 });
+    return new Response('OK', { status: 200, headers: { 'content-type': 'text/plain' } });
   }
 
   const { 0: client, 1: server } = Object.values(new WebSocketPair());
