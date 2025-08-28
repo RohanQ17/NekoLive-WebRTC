@@ -16,7 +16,12 @@ let useWebSocket = true; // Set to false to use localStorage
 let uid = String(Math.floor(Math.random() * 10000));
 
 // WebSocket server configuration
-const WEBSOCKET_URL = 'wss://nekolive.app/ws'; // Production WebSocket URL
+// For Vercel all-in-one deployment, use the Edge Function endpoint below:
+const WEBSOCKET_URL = (typeof location !== 'undefined')
+    ? `wss://${location.host}/api/ws`
+    : 'wss://your-vercel-domain.vercel.app/api/ws';
+// If hosting signaling on EC2 instead, set:
+// const WEBSOCKET_URL = 'wss://signal.yourdomain.com/ws';
 
 // Allow forcing TURN-only via query (?forceTurn=1) or sessionStorage('forceTurn'='1')
 const FORCE_TURN = /[?&]forceTurn=1/i.test(window.location.search) || sessionStorage.getItem('forceTurn') === '1';
