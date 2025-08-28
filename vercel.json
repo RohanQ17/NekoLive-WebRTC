@@ -3,12 +3,6 @@
   "redirects": [
     { "source": "/", "destination": "/main.html" }
   ],
-  "functions": {
-    "api/ws.js": {
-      "runtime": "edge",
-      "regions": ["iad1"]
-    }
-  },
   "headers": [
     {
       "source": "/(.*)",
