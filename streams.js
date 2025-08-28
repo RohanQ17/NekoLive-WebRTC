@@ -17,9 +17,21 @@ let uid = String(Math.floor(Math.random() * 10000));
 
 // WebSocket server configuration
 // For Vercel, use Edge Function endpoint and match scheme to current page (ws for http, wss for https)
-const WEBSOCKET_URL = (typeof location !== 'undefined')
-    ? `${location.protocol === 'https:' ? 'wss' : 'ws'}://${location.host}/api/ws`
-    : 'wss://your-vercel-domain.vercel.app/api/ws';
+const WEBSOCKET_URL = (function() {
+    if (typeof location === 'undefined') {
+        return 'wss://your-vercel-domain.vercel.app/api/ws';
+    }
+    const params = new URLSearchParams(location.search);
+    const override = params.get('signal');
+    if (override) {
+        try {
+            const u = new URL(override);
+            if (u.protocol === 'ws:' || u.protocol === 'wss:') return override;
+        } catch (_) {}
+    }
+    const scheme = location.protocol === 'https:' ? 'wss' : 'ws';
+    return `${scheme}://${location.host}/api/ws`;
+})();
 // If hosting signaling on EC2 instead, set:
 // const WEBSOCKET_URL = 'wss://signal.yourdomain.com/ws';
 
