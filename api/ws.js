@@ -7,7 +7,8 @@ export default async function handler(req) {
     return new Response('OK', { status: 200, headers: { 'content-type': 'text/plain' } });
   }
 
-  const { 0: client, 1: server } = Object.values(new WebSocketPair());
+  const pair = new WebSocketPair();
+  const [client, server] = [pair[0], pair[1]];
 
   server.accept();
   server.userId = Math.random().toString(36).slice(2);
